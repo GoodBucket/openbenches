@@ -60,46 +60,52 @@ if ($_FILES['userfile1']['tmp_name'])
 
 	$location = get_image_location($filename);
 
-	//	If there is a GPS tag on the photo
+
+		//	If there is a GPS tag on the photo
 	if (false != $location)
 	{
-		//	Add the user to the database
-		$userID = insert_user("anon", $_SERVER['REMOTE_ADDR'], date(DateTime::ATOM));
-
-		//	Insert Bench
-		$benchID = insert_bench($location["lat"],$location["lng"], $inscription, $userID);
-
-		//	Save the Image
-		save_image($filename, $media_type, $benchID, $userID);
-
-		//	Save other images
-		if ($_FILES['userfile2']['tmp_name'])
+		if (moderate($filename))
 		{
-			save_image($_FILES['userfile2']['tmp_name'], $_POST['media_type2'], $benchID, $userID);
-		}
-		if ($_FILES['userfile3']['tmp_name'])
-		{
-			save_image($_FILES['userfile3']['tmp_name'], $_POST['media_type3'], $benchID, $userID);
-		}
-		if ($_FILES['userfile4']['tmp_name'])
-		{
-			save_image($_FILES['userfile4']['tmp_name'], $_POST['media_type4'], $benchID, $userID);
-		}
+			//	Add the user to the database
+			$userID = insert_user("anon", $_SERVER['REMOTE_ADDR'], date(DateTime::ATOM));
 
-		//	Drop us an email
-		$key = urlencode(get_edit_key($benchID));
-		mail(NOTIFICATION_EMAIL,
-			"Bench {$benchID}",
-			"{$inscription} https://openbenches.org/bench/{$benchID} from " . $_SERVER['REMOTE_ADDR'] .
-			" - edit https://openbenches.org/edit/{$benchID}/{$key}/"
-		);
+			//	Insert Bench
+			$benchID = insert_bench($location["lat"],$location["lng"], $inscription, $userID);
 
-		//	Tweet the bench
-		tweet_bench($benchID, $sha1, $inscription, $location["lat"], $location["lng"], "CC BY-SA 4.0");
+			//	Save the Image
+			save_image($filename, $media_type, $benchID, $userID);
 
-		//	Send the user to the bench's page
-		header("Location: /edit/{$benchID}/{$key}/");
-		die();
+			//	Save other images
+			if ($_FILES['userfile2']['tmp_name'])
+			{
+				save_image($_FILES['userfile2']['tmp_name'], $_POST['media_type2'], $benchID, $userID);
+			}
+			if ($_FILES['userfile3']['tmp_name'])
+			{
+				save_image($_FILES['userfile3']['tmp_name'], $_POST['media_type3'], $benchID, $userID);
+			}
+			if ($_FILES['userfile4']['tmp_name'])
+			{
+				save_image($_FILES['userfile4']['tmp_name'], $_POST['media_type4'], $benchID, $userID);
+			}
+
+			//	Drop us an email
+			$key = urlencode(get_edit_key($benchID));
+			mail(NOTIFICATION_EMAIL,
+				"Bench {$benchID}",
+				"{$inscription} https://openbenches.org/bench/{$benchID} from " . $_SERVER['REMOTE_ADDR'] .
+				" - edit https://openbenches.org/edit/{$benchID}/{$key}/"
+			);
+
+			//	Tweet the bench
+			tweet_bench($benchID, $sha1, $inscription, $location["lat"], $location["lng"], "CC BY-SA 4.0");
+
+			//	Send the user to the bench's page
+			header("Location: /edit/{$benchID}/{$key}/");
+			die();
+		} else {
+			$error_message .= "<h3>Uploaded image has failed moderation. Please use a different image.</h3>";
+		}
 	} else {
 		$error_message .= "<h3>No location metadata found in image</h3>";
 	}

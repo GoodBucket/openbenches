@@ -64,6 +64,30 @@ function get_image_location($file)
 	return false;
 }
 
+// This will only work for images < 4MB, so consider resizing larger images first.
+function moderate($file) {
+	if (MS_COGNITIVE_API_KEY) {
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, 'https://westeurope.api.cognitive.microsoft.com/vision/v1.0/analyze');
+		curl_setopt($ch, CURLOPT_HEADER, array(
+			'Ocp-Apim-Subscription-Key: ' + MS_COGNITIVE_API_KEY
+		));
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+		curl_setopt($ch, CURLOPT_POST, true);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, array(
+						'file' => '@' + $file,
+						'visualFeatures' => 'Adult'
+		));
+		$result = curl_exec($ch);
+		curl_close($ch);
+		$json = json_decode($result, true);
+		$is_naughty = $json['adult']['isAdultContent'] || $json['adult']['isRacyContent'];
+		return !$is_naughty;
+	} else {
+		return true;
+	}
+}
+
 function tweet_bench($benchID, $sha1=null, $inscription=null, $latitude=null, $longitude=null, $license=null){
 	//	Send Tweet
 	\Codebird\Codebird::setConsumerKey(OAUTH_CONSUMER_KEY, OAUTH_CONSUMER_SECRET);

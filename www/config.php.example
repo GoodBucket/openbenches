@@ -28,3 +28,7 @@ define('EDIT_SALT', '');
 //	Reverse Geocoding
 //	https://geocoder.opencagedata.com/api
 define('OPENCAGE_API_KEY', '');
+
+//	Moderation
+//	https://westus.dev.cognitive.microsoft.com/docs/services/56f91f2d778daf23d8ec6739/operations/56f91f2e778daf14a499e1fa
+define('MS_COGNITIVE_API_KEY', '');
